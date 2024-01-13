@@ -5,7 +5,6 @@ import random
 from PIL import Image
 from pymongo import MongoClient
 
-# Create a client connection to your MongoDB instance
 client = MongoClient('mongodb+srv://kartikrathi0808:kartiksurvey@cluster0.wz4wbhg.mongodb.net/survey?retryWrites=true&w=majority')
 db = client['mydatabase']
 
