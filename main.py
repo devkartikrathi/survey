@@ -3,15 +3,20 @@ import os
 import pandas as pd
 import random
 from PIL import Image
+from pymongo import MongoClient
 
-def save_to_csv(data, csv_filename):
-    df = pd.DataFrame(data)
-    df.to_csv(csv_filename, mode='a', header=not os.path.exists(csv_filename), index=False)
+# Create a client connection to your MongoDB instance
+client = MongoClient('mongodb+srv://kartikrathi0808:kartiksurvey@cluster0.wz4wbhg.mongodb.net/survey?retryWrites=true&w=majority')
+db = client['mydatabase']
+
+
+def store_survey_data(data):
+    db.survey.insert_one(data)
 
 def get_random_images(folder_path, num_images=1):
-    images = os.listdir(folder_path)
+    images = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
     random_images = random.sample(images, min(num_images, len(images)))
-    return [os.path.join(folder_path, img) for img in random_images]
+    return random_images
 
 def display_image_grid(images, columns=3):
     images = [img for sublist in images for img in sublist]
@@ -19,17 +24,16 @@ def display_image_grid(images, columns=3):
         cols = st.columns(columns)
         for j in range(columns):
             if i+j < len(images):
-                cols[j].image(images[i+j], use_column_width=True)
+                cols[j].image(images[i+j], use_column_width=True, caption=os.path.basename(os.path.dirname(images[i+j])))
 
 def get_user_selection_images(batch_num, images):
     if f'batch_{batch_num}' not in st.session_state:
         st.session_state[f'batch_{batch_num}'] = []
     st.title(f'Batch {batch_num} - Choose 3 images:')
-    st.session_state[f'batch_{batch_num}'] = st.multiselect('Select Images', images, st.session_state[f'batch_{batch_num}'], key=f'batch_{batch_num+30}')
+    st.session_state[f'batch_{batch_num}'] = st.multiselect('Select Images', [os.path.basename(os.path.dirname(img)) for img in images], st.session_state[f'batch_{batch_num}'], key=f'batch_{batch_num+30}')
     return st.session_state[f'batch_{batch_num}']
 
 base_folder_images = 'img'
-survey_csv_filename = 'survey_data.csv'
 
 if 'text_answers' not in st.session_state:
     st.session_state['text_answers'] = ["", "", ""]
@@ -59,7 +63,7 @@ for batch_num in range(3):
             folders = os.listdir(base_folder_images)[batch_num*9:(batch_num+1)*9]
             st.session_state['batch_images'][batch_num] = [get_random_images(os.path.join(base_folder_images, folder)) for folder in folders]
         display_image_grid(st.session_state['batch_images'][batch_num])
-        st.session_state['selected_images'][batch_num] = get_user_selection_images(batch_num+1, st.session_state['batch_images'][batch_num])
+        st.session_state['selected_images'][batch_num] = get_user_selection_images(batch_num+1, [img for sublist in st.session_state['batch_images'][batch_num] for img in sublist])
         if len(st.session_state['selected_images'][batch_num]) == 3:
             if batch_num < 2:
                 st.session_state['survey_page'] = f'image{batch_num+2}'
@@ -67,15 +71,15 @@ for batch_num in range(3):
                 st.session_state['survey_page'] = 'submit'
             st.experimental_rerun()
 
-# Save survey data to CSV on submit
+# Save survey data to MongoDB on submit
 if st.session_state.get('survey_page') == 'submit':
     survey_data = {
-        'Name': [st.session_state['text_answers'][0]],
-        'Satisfaction': [st.session_state['text_answers'][1]],
-        'Comments': [st.session_state['text_answers'][2]],
-        'Selected_Folders': [folder.split('/')[-1] for batch in st.session_state['selected_images'] for folder in batch]
+        'Name': st.session_state['text_answers'][0],
+        'Satisfaction': st.session_state['text_answers'][1],
+        'Comments': st.session_state['text_answers'][2],
+        'Selected_Folders': [os.path.basename(os.path.dirname(folder)) for batch in st.session_state['selected_images'] for folder in batch]
     }
-    save_to_csv(survey_data, survey_csv_filename)
+    store_survey_data(survey_data)
     st.success('Survey submitted successfully!')
 
 
