@@ -77,3 +77,17 @@ if st.session_state.get('survey_page') == 'submit':
     }
     save_to_csv(survey_data, survey_csv_filename)
     st.success('Survey submitted successfully!')
+
+
+#===============================================================
+
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
+
+#===============================================================
