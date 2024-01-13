@@ -28,7 +28,7 @@ def get_user_selection_images(batch_num, images):
     st.session_state[f'batch_{batch_num}'] = st.multiselect('Select Images', images, st.session_state[f'batch_{batch_num}'], key=f'batch_{batch_num+30}')
     return st.session_state[f'batch_{batch_num}']
 
-base_folder_images = 'images'
+base_folder_images = 'img'
 survey_csv_filename = 'survey_data.csv'
 
 if 'text_answers' not in st.session_state:
