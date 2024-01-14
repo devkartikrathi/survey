@@ -5,7 +5,10 @@ import random
 from PIL import Image
 from pymongo import MongoClient
 
-client = MongoClient('mongodb+srv://kartikrathi0808:kartiksurvey@cluster0.wz4wbhg.mongodb.net/survey?retryWrites=true&w=majority')
+username = st.secrets["mongodb_username"]
+password = st.secrets["mongodb_password"]
+database = st.secrets["mongodb_database"]
+client = MongoClient(f'mongodb+srv://{username}:{password}@cluster0.wz4wbhg.mongodb.net/{database}?retryWrites=true&w=majority')
 db = client['mydatabase']
 
 
