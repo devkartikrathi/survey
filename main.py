@@ -59,15 +59,18 @@ if 'survey_page' not in st.session_state or st.session_state['survey_page'] == '
         st.experimental_rerun()
 
 # Image-based Survey
-for batch_num in range(3):
+for batch_num in range(4): 
     if st.session_state.get('survey_page') == f'image{batch_num+1}':
         if not st.session_state['batch_images'][batch_num]:
-            folders = os.listdir(base_folder_images)[batch_num*9:(batch_num+1)*9]
-            st.session_state['batch_images'][batch_num] = [get_random_images(os.path.join(base_folder_images, folder)) for folder in folders]
+            if batch_num < 3:
+                folders = os.listdir(base_folder_images)[batch_num*9:(batch_num+1)*9]
+            else:  
+                folders = [folder for batch in st.session_state['selected_images'] for folder in batch]
+            st.session_state['batch_images'][batch_num] = [get_random_images(os.path.join(base_folder_images, os.path.basename(os.path.dirname(folder)))) for folder in folders]
         display_image_grid(st.session_state['batch_images'][batch_num])
         st.session_state['selected_images'][batch_num] = get_user_selection_images(batch_num+1, [img for sublist in st.session_state['batch_images'][batch_num] for img in sublist])
         if len(st.session_state['selected_images'][batch_num]) == 3:
-            if batch_num < 2:
+            if batch_num < 3:
                 st.session_state['survey_page'] = f'image{batch_num+2}'
             else:
                 st.session_state['survey_page'] = 'submit'
